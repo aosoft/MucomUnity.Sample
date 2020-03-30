@@ -1,10 +1,8 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.IO;
+using MucomUnity;
+using UniRx;
 using UnityEngine;
 using UnityEngine.UI;
-using Mucom;
-using UniRx;
-using System.IO;
 
 public class MucomControl : MonoBehaviour
 {
@@ -14,10 +12,12 @@ public class MucomControl : MonoBehaviour
 	public Button _stopButton;
 
 	private MucomAudioClip _audioClip;
+	private MucomMDSound _mdsound;
 
 	private void Awake()
 	{
-		mucomDotNET.Common.msg.MakeMessageDic(new string[] { });
+		MucomDotNetUtility.InitializeMucomLogger(true);
+		_mdsound = new MucomMDSound(1024, MucomDotNetUtility.OpenFromStreamingAssets);
 
 		_compileButton.OnClickAsObservable().Subscribe(_ =>
 		{
@@ -30,30 +30,17 @@ public class MucomControl : MonoBehaviour
 				w.Flush();
 				ms.Seek(0, SeekOrigin.Begin);
 
+				var compiler = MucomDotNetUtility.CreateCompiler();
+				var bin = compiler.Compile(ms, MucomDotNetUtility.OpenFromStreamingAssets);
+
 				_audioSource.clip = null;
 				_audioClip?.Dispose();
 				_audioClip = null;
 
-				var audioClip = new MucomAudioClip(ms);
-				try
-				{
-					if (audioClip.AvailableSongData)
-					{
-						Debug.Log(audioClip.CompileResult);
-						_audioSource.clip = audioClip.UnityAudioClip;
-						_audioSource.Play();
-					}
-					else
-					{
-						Debug.LogError(audioClip.CompileResult);
-						audioClip.Dispose();
-					}
-				}
-				catch
-				{
-					audioClip.Dispose();
-					throw;
-				}
+				_mdsound.YM2608.Reset(0);
+				var audioClip = new MucomAudioClip(_mdsound, bin, MucomDotNetUtility.OpenFromStreamingAssets);
+				_audioSource.clip = audioClip.UnityAudioClip;
+				_audioSource.Play();
 			}
 		}).AddTo(this);
 
