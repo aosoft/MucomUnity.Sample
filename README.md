@@ -3,9 +3,10 @@ MucomUnity.Sample
 
 ## 使い方
 
-1. UniRx をインストール
-2. StreamingAssets 下に PCM 、音色ファイル等を配置
-3. Unity Editor 上で実行
+1. Assets/MucomUnity の SubModule を更新
+2. UniRx をインストール
+3. StreamingAssets 下に PCM 、音色ファイル等を配置
+4. Unity Editor 上で実行
 
 
 ## ライセンス
